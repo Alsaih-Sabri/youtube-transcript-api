@@ -403,7 +403,7 @@ async def health():
     return {"status": "ok", "app": "YouTube Transcript Studio", "version": "1.2.4"}
 
 
-@app.get("/favicon.ico", include_in_schema=False)
+@app.api_route("/favicon.ico", methods=["GET", "HEAD"], include_in_schema=False)
 async def favicon():
     """Serve favicon for direct browser requests."""
     fav_path = STATIC_DIR / "favicon.svg"
