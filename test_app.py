@@ -366,6 +366,15 @@ class TestYouTubeTranscriptApp(unittest.TestCase):
         self.assertIn("paragraphs", data)
         self.assertEqual(len(data["paragraphs"]), 1)
 
+    def test_favicon_endpoints(self):
+        res_svg = self.client.get("/static/favicon.svg")
+        self.assertEqual(res_svg.status_code, 200)
+        self.assertIn("svg", res_svg.text)
+
+        res_ico = self.client.get("/favicon.ico")
+        self.assertEqual(res_ico.status_code, 200)
+        self.assertIn("svg", res_ico.text)
+
 
 if __name__ == "__main__":
     unittest.main()
