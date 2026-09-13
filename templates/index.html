@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Transcript Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              400: '#fb7185',
+              500: '#f43f5e',
+              600: '#e11d48',
+              700: '#be123c',
+            },
+            glass: {
+              card: 'rgba(255, 255, 255, 0.04)',
+              cardHover: 'rgba(255, 255, 255, 0.08)',
+              border: 'rgba(255, 255, 255, 0.12)',
+              input: 'rgba(0, 0, 0, 0.35)',
+            }
+          },
+          boxShadow: {
+            'ios-glass': '0 16px 40px 0 rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16)',
+            'ios-card': '0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12)',
+            'ios-btn': '0 4px 20px 0 rgba(225, 29, 72, 0.4), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35)',
+            'ios-pill': '0 4px 16px 0 rgba(0, 0, 0, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+      background-color: #07090e;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .highlight {
+      background-color: rgba(255, 215, 0, 0.25);
+      color: #ffd700;
+      padding: 0.1rem 0.35rem;
+      border-radius: 0.375rem;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    }
+    .glass-surface {
+      background: rgba(255, 255, 255, 0.045);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.14);
+    }
+    .glass-pill {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    .glass-input {
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .glass-input:focus {
+      border-color: rgba(244, 63, 94, 0.6);
+      box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.2);
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col selection:bg-rose-500 selection:text-white antialiased relative overflow-x-hidden">
+
+  <!-- Ambient iOS Background Glows -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-rose-600/15 rounded-full blur-[140px]"></div>
+    <div class="absolute top-1/3 -right-32 w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[150px]"></div>
+    <div class="absolute bottom-10 left-10 w-[550px] h-[550px] bg-cyan-600/10 rounded-full blur-[140px]"></div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header class="sticky top-4 z-50 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="h-16 px-5 sm:px-6 rounded-full glass-surface flex items-center justify-between relative shadow-ios-glass">
+      
+      <!-- Left: Logo & Brand -->
+      <div class="flex items-center space-x-3 shrink-0">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-[0_4px_16px_rgba(225,29,72,0.4),inset_0_1px_1px_rgba(255,255,255,0.4)]">
+          <svg class="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
+            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+          </svg>
+        </div>
+        <div class="hidden sm:block">
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-sm tracking-tight text-white/90">Transcript Studio</span>
+            <span class="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-white/10 text-rose-300 border border-white/15">API</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: API Docs Button (Exactly Centered) -->
+      <div class="absolute left-1/2 transform -translate-x-1/2 flex items-center">
+        <a href="/docs" target="_blank" rel="noopener noreferrer" 
+           class="glass-pill px-5 py-2 rounded-full text-white/90 hover:text-white hover:bg-white/[0.14] text-xs font-semibold tracking-wide flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 group">
+          <svg class="w-3.5 h-3.5 text-rose-400 group-hover:text-rose-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+          </svg>
+          <span>API Docs</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        </a>
+      </div>
+
+      <!-- Right: GitHub Link -->
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="https://github.com/jdepoix/youtube-transcript-api" target="_blank" rel="noopener noreferrer" 
+           class="text-xs text-white/70 hover:text-white flex items-center space-x-1.5 transition px-3.5 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.12] border border-white/10">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span class="font-medium hidden sm:inline">GitHub</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 relative z-10">
+
+    <!-- Input Hero Glass Card -->
+    <section class="rounded-3xl glass-surface p-6 sm:p-8 space-y-5">
+      <div class="space-y-1">
+        <label for="url-input" class="block text-xs font-bold tracking-wider uppercase text-white/60">
+          YouTube URL or Video ID
+        </label>
+        <p class="text-xs text-white/40">Paste any video link, Shorts, Live, or direct ID</p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/40">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+          </div>
+          <input 
+            id="url-input" 
+            type="text" 
+            placeholder="https://www.youtube.com/watch?v=... or youtu.be/... or Shorts" 
+            class="w-full pl-11 pr-24 py-3.5 glass-input rounded-2xl text-white placeholder-white/30 focus:outline-none transition text-sm sm:text-base"
+            autocomplete="off"
+          />
+          <div class="absolute inset-y-0 right-2 flex items-center space-x-1">
+            <button id="paste-btn" type="button" title="Paste from clipboard" class="px-2.5 py-1.5 text-xs text-white/60 hover:text-white rounded-xl hover:bg-white/10 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              <span>Paste</span>
+            </button>
+          </div>
+        </div>
+
+        <button id="fetch-btn" type="button" class="px-8 py-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 active:scale-[0.97] text-white text-sm font-bold rounded-2xl shadow-ios-btn transition flex items-center justify-center gap-2 whitespace-nowrap min-w-[160px]">
+          <span id="fetch-spinner" class="hidden">
+            <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </span>
+          <span id="fetch-btn-text">Get Transcript</span>
+        </button>
+      </div>
+
+      <!-- Optional Proxy Accordion -->
+      <div class="pt-1">
+        <button id="toggle-proxy-btn" type="button" class="text-xs text-white/40 hover:text-white/80 flex items-center gap-1.5 transition">
+          <svg id="proxy-chevron" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <span>Proxy Configuration (Optional — bypass YouTube IP bans)</span>
+        </button>
+        
+        <div id="proxy-panel" class="hidden mt-3 p-4 rounded-2xl glass-input grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="space-y-2">
+            <span class="font-semibold text-white/70">Custom HTTP/HTTPS Proxy:</span>
+            <input id="proxy-http" type="text" placeholder="http://user:pass@host:port" class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:ring-1 focus:ring-rose-500 focus:outline-none">
+            <input id="proxy-https" type="text" placeholder="https://user:pass@host:port" class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:ring-1 focus:ring-rose-500 focus:outline-none">
+          </div>
+          <div class="space-y-2">
+            <span class="font-semibold text-white/70">Webshare Residential Proxy:</span>
+            <input id="webshare-user" type="text" placeholder="Webshare Username" class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:ring-1 focus:ring-rose-500 focus:outline-none">
+            <input id="webshare-pass" type="password" placeholder="Webshare Password" class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:ring-1 focus:ring-rose-500 focus:outline-none">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Error Alert Box -->
+    <div id="error-box" class="hidden rounded-2xl bg-rose-950/30 border border-rose-500/30 backdrop-blur-xl p-4 text-rose-200 flex items-start space-x-3 transition animate-fadeIn">
+      <div class="mt-0.5 text-rose-400 shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <div class="flex-1 text-sm">
+        <h4 class="font-bold text-rose-300" id="error-title">Could not retrieve transcript</h4>
+        <p class="mt-1 text-xs text-rose-200/80 leading-relaxed" id="error-message"></p>
+      </div>
+      <button id="close-error-btn" class="text-rose-400 hover:text-rose-200 p-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Empty State / Features Overview -->
+    <div id="empty-state" class="py-16 text-center space-y-8">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl glass-surface text-rose-400 shadow-ios-glass">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <div class="max-w-md mx-auto space-y-2">
+        <h3 class="text-xl font-extrabold text-white/90">Instant YouTube Transcripts</h3>
+        <p class="text-xs text-white/50 leading-relaxed">
+          Paste any YouTube URL or Video ID above to explore interactive synced transcripts, switch languages, translate live, and export to TXT, SRT, VTT, or JSON.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto pt-2 text-left">
+        <div class="p-5 rounded-3xl glass-surface space-y-2">
+          <div class="text-rose-400 font-semibold text-xs flex items-center gap-2">
+            <div class="w-6 h-6 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            Video Synchronization
+          </div>
+          <p class="text-xs text-white/50 leading-relaxed">Click any timestamp to automatically jump and play the video right at that position.</p>
+        </div>
+        <div class="p-5 rounded-3xl glass-surface space-y-2">
+          <div class="text-indigo-400 font-semibold text-xs flex items-center gap-2">
+            <div class="w-6 h-6 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+            </div>
+            Multi-Language & Translate
+          </div>
+          <p class="text-xs text-white/50 leading-relaxed">Switch between native captions, or translate on-the-fly into 100+ languages.</p>
+        </div>
+        <div class="p-5 rounded-3xl glass-surface space-y-2">
+          <div class="text-emerald-400 font-semibold text-xs flex items-center gap-2">
+            <div class="w-6 h-6 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            </div>
+            Multi-Format Export
+          </div>
+          <p class="text-xs text-white/50 leading-relaxed">Export formatted SubRip (.srt), WebVTT (.vtt), JSON, or clean plain text (.txt).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Workspace -->
+    <div id="workspace" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left Column: Video Player, Metadata & Export Controls -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Video Player Glass Card -->
+        <div class="rounded-3xl glass-surface overflow-hidden">
+          <div class="relative w-full aspect-video bg-black/60">
+            <iframe id="youtube-player" class="w-full h-full" 
+                    src="" 
+                    title="YouTube video player" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+            </iframe>
+          </div>
+          
+          <div class="p-5 space-y-4">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-white/50">ID: <strong id="meta-video-id" class="text-white/90 font-mono">--</strong></span>
+              <a id="meta-youtube-link" href="#" target="_blank" class="text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1 transition">
+                <span>Watch on YouTube</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </a>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-3 gap-2.5 pt-2 border-t border-white/[0.08] text-center">
+              <div class="p-2.5 rounded-2xl bg-black/25 border border-white/[0.07]">
+                <span class="block text-[10px] uppercase font-bold tracking-wider text-white/40">Snippets</span>
+                <span id="stat-snippets" class="font-extrabold text-sm text-white/90">0</span>
+              </div>
+              <div class="p-2.5 rounded-2xl bg-black/25 border border-white/[0.07]">
+                <span class="block text-[10px] uppercase font-bold tracking-wider text-white/40">Words</span>
+                <span id="stat-words" class="font-extrabold text-sm text-white/90">0</span>
+              </div>
+              <div class="p-2.5 rounded-2xl bg-black/25 border border-white/[0.07]">
+                <span class="block text-[10px] uppercase font-bold tracking-wider text-white/40">Duration</span>
+                <span id="stat-duration" class="font-extrabold text-sm text-white/90">0:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Languages & Translation Card -->
+        <div class="rounded-3xl glass-surface p-6 space-y-4">
+          <h3 class="text-xs font-bold tracking-wider uppercase text-white/70 flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+            Transcript Language
+          </h3>
+
+          <div class="space-y-3">
+            <div>
+              <label for="lang-select" class="block text-[11px] font-semibold text-white/50 mb-1.5">Available Captions</label>
+              <select id="lang-select" class="w-full px-3.5 py-2.5 glass-input rounded-2xl text-white text-xs focus:ring-1 focus:ring-rose-500 focus:outline-none cursor-pointer">
+                <!-- Options injected via JS -->
+              </select>
+            </div>
+
+            <!-- Translation Section -->
+            <div id="translate-container" class="pt-3 border-t border-white/[0.08]">
+              <label for="translate-select" class="block text-[11px] font-semibold text-white/50 mb-1.5">Translate To</label>
+              <div class="flex gap-2">
+                <select id="translate-select" class="flex-1 px-3.5 py-2.5 glass-input rounded-2xl text-white text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none cursor-pointer">
+                  <!-- Options injected via JS -->
+                </select>
+                <button id="translate-btn" type="button" class="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-semibold text-xs rounded-2xl transition flex items-center gap-1.5 whitespace-nowrap active:scale-95 shadow-sm">
+                  <span id="translate-spinner" class="hidden">
+                    <svg class="animate-spin w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                  </span>
+                  <span>Translate</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exports & Actions Card -->
+        <div class="rounded-3xl glass-surface p-6 space-y-4">
+          <h3 class="text-xs font-bold tracking-wider uppercase text-white/70 flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Export & Actions
+          </h3>
+
+          <div class="space-y-2.5">
+            <button id="copy-all-btn" class="w-full py-3 px-4 glass-pill hover:bg-white/[0.14] text-white/90 hover:text-white rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 active:scale-98">
+              <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <span id="copy-all-text">Copy Full Transcript (Text)</span>
+            </button>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button onclick="downloadFormat('txt')" class="p-3 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex items-center justify-center gap-1.5 active:scale-95">
+                <span class="text-emerald-400 font-mono font-bold">.TXT</span> Plain Text
+              </button>
+              <button onclick="downloadFormat('srt')" class="p-3 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex items-center justify-center gap-1.5 active:scale-95">
+                <span class="text-blue-400 font-mono font-bold">.SRT</span> Subtitles
+              </button>
+              <button onclick="downloadFormat('vtt')" class="p-3 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex items-center justify-center gap-1.5 active:scale-95">
+                <span class="text-purple-400 font-mono font-bold">.VTT</span> WebVTT
+              </button>
+              <button onclick="downloadFormat('json')" class="p-3 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex items-center justify-center gap-1.5 active:scale-95">
+                <span class="text-amber-400 font-mono font-bold">.JSON</span> Data
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Interactive Transcript Explorer -->
+      <div class="lg:col-span-7 space-y-4">
+        
+        <!-- Search & Segmented Control Bar -->
+        <div class="rounded-3xl glass-surface p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div class="relative w-full sm:w-80">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/40">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <input 
+              id="search-input" 
+              type="text" 
+              placeholder="Filter transcript keywords..." 
+              class="w-full pl-10 pr-8 py-2 glass-input rounded-2xl text-xs sm:text-sm text-white placeholder-white/30 focus:outline-none"
+            />
+            <button id="clear-search-btn" class="hidden absolute inset-y-0 right-2 flex items-center text-white/40 hover:text-white text-xs">
+              ✕
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+            <span id="search-count" class="text-xs text-white/50 font-medium"></span>
+            
+            <!-- iOS Style Segmented Control -->
+            <div class="flex bg-black/40 p-1 rounded-2xl border border-white/[0.08] text-xs">
+              <button id="view-timeline-btn" class="px-3.5 py-1.5 rounded-xl bg-white/[0.16] text-white font-semibold shadow-sm transition-all duration-200">
+                Timeline
+              </button>
+              <button id="view-text-btn" class="px-3.5 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200">
+                Story Text
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transcript Content Glass Area -->
+        <div class="rounded-3xl glass-surface p-5 min-h-[520px]">
+          
+          <!-- Timeline View -->
+          <div id="transcript-timeline" class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1.5 custom-scrollbar">
+            <!-- Snippet rows injected via JS -->
+          </div>
+
+          <!-- Story Text View (Continuous Reading) -->
+          <div id="transcript-text" class="hidden max-h-[680px] overflow-y-auto pr-2 custom-scrollbar text-sm leading-relaxed text-white/80 p-3 select-text">
+            <!-- Full continuous text injected via JS -->
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- iOS Style Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-2.5 glass-pill px-5 py-3 rounded-2xl shadow-ios-glass text-xs font-semibold text-white">
+    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <span id="toast-message">Notification</span>
+  </div>
+
+  <script>
+    // State management
+    const state = {
+      currentVideoId: '',
+      currentTranscript: null,
+      availableTranscripts: [],
+      translationLanguages: [],
+      currentSnippets: [],
+      activeFilter: '',
+      viewMode: 'timeline',
+      formattedData: {
+        text: '',
+        srt: '',
+        vtt: '',
+        json: ''
+      }
+    };
+
+    // DOM Elements
+    const urlInput = document.getElementById('url-input');
+    const fetchBtn = document.getElementById('fetch-btn');
+    const fetchSpinner = document.getElementById('fetch-spinner');
+    const fetchBtnText = document.getElementById('fetch-btn-text');
+    const pasteBtn = document.getElementById('paste-btn');
+    const toggleProxyBtn = document.getElementById('toggle-proxy-btn');
+    const proxyChevron = document.getElementById('proxy-chevron');
+    const proxyPanel = document.getElementById('proxy-panel');
+    const errorBox = document.getElementById('error-box');
+    const errorTitle = document.getElementById('error-title');
+    const errorMessage = document.getElementById('error-message');
+    const closeErrorBtn = document.getElementById('close-error-btn');
+    const emptyState = document.getElementById('empty-state');
+    const workspace = document.getElementById('workspace');
+    const youtubePlayer = document.getElementById('youtube-player');
+    const metaVideoId = document.getElementById('meta-video-id');
+    const metaYoutubeLink = document.getElementById('meta-youtube-link');
+    const statSnippets = document.getElementById('stat-snippets');
+    const statWords = document.getElementById('stat-words');
+    const statDuration = document.getElementById('stat-duration');
+    const langSelect = document.getElementById('lang-select');
+    const translateContainer = document.getElementById('translate-container');
+    const translateSelect = document.getElementById('translate-select');
+    const translateBtn = document.getElementById('translate-btn');
+    const translateSpinner = document.getElementById('translate-spinner');
+    const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search-btn');
+    const searchCount = document.getElementById('search-count');
+    const transcriptTimeline = document.getElementById('transcript-timeline');
+    const transcriptText = document.getElementById('transcript-text');
+    const viewTimelineBtn = document.getElementById('view-timeline-btn');
+    const viewTextBtn = document.getElementById('view-text-btn');
+    const copyAllBtn = document.getElementById('copy-all-btn');
+    const copyAllText = document.getElementById('copy-all-text');
+
+    // Proxy Toggle
+    toggleProxyBtn.addEventListener('click', () => {
+      proxyPanel.classList.toggle('hidden');
+      proxyChevron.classList.toggle('rotate-90');
+    });
+
+    closeErrorBtn.addEventListener('click', () => {
+      errorBox.classList.add('hidden');
+    });
+
+    // Paste handler
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          urlInput.value = text.trim();
+          showToast('Pasted from clipboard');
+        }
+      } catch (err) {
+        urlInput.focus();
+      }
+    });
+
+    // Enter key to fetch
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        fetchTranscript();
+      }
+    });
+
+    fetchBtn.addEventListener('click', () => {
+      fetchTranscript();
+    });
+
+    // Format seconds into MM:SS or HH:MM:SS
+    function formatTime(seconds) {
+      const s = Math.floor(seconds);
+      const hrs = Math.floor(s / 3600);
+      const mins = Math.floor((s % 3600) / 60);
+      const secs = s % 60;
+      if (hrs > 0) {
+        return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Toast helper
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = msg;
+      toast.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Show / hide errors
+    function showError(title, msg) {
+      errorTitle.textContent = title;
+      errorMessage.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+    function hideError() {
+      errorBox.classList.add('hidden');
+    }
+
+    // Get Proxy Payload
+    function getProxyPayload() {
+      return {
+        proxy_http: document.getElementById('proxy-http').value.trim() || null,
+        proxy_https: document.getElementById('proxy-https').value.trim() || null,
+        webshare_user: document.getElementById('webshare-user').value.trim() || null,
+        webshare_pass: document.getElementById('webshare-pass').value.trim() || null,
+      };
+    }
+
+    // Fetch Transcript
+    async function fetchTranscript(chosenLanguage = null) {
+      const inputVal = urlInput.value.trim();
+      if (!inputVal) {
+        showError('Missing Input', 'Please enter a valid YouTube URL or Video ID.');
+        return;
+      }
+
+      hideError();
+      fetchBtn.disabled = true;
+      fetchSpinner.classList.remove('hidden');
+      fetchBtnText.textContent = 'Fetching...';
+
+      try {
+        const payload = {
+          url_or_id: inputVal,
+          language: chosenLanguage,
+          ...getProxyPayload()
+        };
+
+        const res = await fetch('/api/fetch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          showError(data.error_title || 'Fetch Failed', data.error_message || 'Could not fetch transcript.');
+          return;
+        }
+
+        renderWorkspace(data);
+
+      } catch (err) {
+        showError('Network Error', err.message || 'Failed to connect to backend server.');
+      } finally {
+        fetchBtn.disabled = false;
+        fetchSpinner.classList.add('hidden');
+        fetchBtnText.textContent = 'Get Transcript';
+      }
+    }
+
+    // Render workspace after successful fetch
+    function renderWorkspace(data) {
+      state.currentVideoId = data.video_id;
+      state.currentTranscript = data.transcript;
+      state.availableTranscripts = data.available_transcripts || [];
+      state.translationLanguages = data.translation_languages || [];
+      state.currentSnippets = data.transcript.snippets || [];
+      state.formattedData = data.formatted || {};
+
+      // Set Player
+      youtubePlayer.src = `https://www.youtube.com/embed/${data.video_id}?enablejsapi=1`;
+      metaVideoId.textContent = data.video_id;
+      metaYoutubeLink.href = `https://www.youtube.com/watch?v=${data.video_id}`;
+
+      // Stats
+      statSnippets.textContent = state.currentSnippets.length.toLocaleString();
+      const wordCount = state.currentSnippets.reduce((sum, s) => sum + (s.text ? s.text.trim().split(/\s+/).length : 0), 0);
+      statWords.textContent = wordCount.toLocaleString();
+      
+      const lastSnippet = state.currentSnippets[state.currentSnippets.length - 1];
+      const maxDuration = lastSnippet ? lastSnippet.start + lastSnippet.duration : 0;
+      statDuration.textContent = formatTime(maxDuration);
+
+      // Populate Languages Dropdown
+      langSelect.innerHTML = '';
+      state.availableTranscripts.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.language_code;
+        const typeLabel = t.is_generated ? ' [Auto]' : ' [Manual]';
+        opt.textContent = `${t.language} (${t.language_code})${typeLabel}`;
+        if (t.language_code === data.transcript.language_code) {
+          opt.selected = true;
+        }
+        langSelect.appendChild(opt);
+      });
+
+      // Populate Translation Dropdown
+      if (state.translationLanguages && state.translationLanguages.length > 0) {
+        translateContainer.classList.remove('hidden');
+        translateSelect.innerHTML = '';
+        state.translationLanguages.forEach(tl => {
+          const opt = document.createElement('option');
+          opt.value = tl.language_code;
+          opt.textContent = `${tl.language} (${tl.language_code})`;
+          translateSelect.appendChild(opt);
+        });
+      } else {
+        translateContainer.classList.add('hidden');
+      }
+
+      // Display UI
+      emptyState.classList.add('hidden');
+      workspace.classList.remove('hidden');
+
+      // Render Snippets
+      renderSnippets();
+    }
+
+    // Language change
+    langSelect.addEventListener('change', () => {
+      fetchTranscript(langSelect.value);
+    });
+
+    // Translate button handler
+    translateBtn.addEventListener('click', async () => {
+      const targetLang = translateSelect.value;
+      if (!targetLang) return;
+
+      translateBtn.disabled = true;
+      translateSpinner.classList.remove('hidden');
+
+      try {
+        const payload = {
+          video_id: state.currentVideoId,
+          source_language: langSelect.value,
+          target_language: targetLang,
+          ...getProxyPayload()
+        };
+
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showError('Translation Failed', data.error_message || 'Could not translate transcript.');
+          return;
+        }
+
+        state.currentTranscript = data.transcript;
+        state.currentSnippets = data.transcript.snippets || [];
+        state.formattedData = data.formatted || {};
+        renderSnippets();
+        showToast(`Translated to ${data.transcript.language}!`);
+
+      } catch (err) {
+        showError('Translation Error', err.message);
+      } finally {
+        translateBtn.disabled = false;
+        translateSpinner.classList.add('hidden');
+      }
+    });
+
+    // Jump to timestamp in YouTube embedded iframe
+    function seekToTimestamp(seconds) {
+      const sec = Math.max(0, Math.floor(seconds));
+      if (youtubePlayer && youtubePlayer.contentWindow) {
+        youtubePlayer.contentWindow.postMessage(JSON.stringify({
+          event: 'command',
+          func: 'seekTo',
+          args: [sec, true]
+        }), '*');
+        youtubePlayer.contentWindow.postMessage(JSON.stringify({
+          event: 'command',
+          func: 'playVideo',
+          args: []
+        }), '*');
+      }
+      showToast(`Jumped to ${formatTime(sec)}`);
+    }
+
+    // Render snippets in Timeline & Text modes
+    function renderSnippets() {
+      const filter = state.activeFilter.toLowerCase();
+      transcriptTimeline.innerHTML = '';
+      
+      let matchedCount = 0;
+      let fullParagraphs = [];
+
+      state.currentSnippets.forEach((snippet, index) => {
+        const text = snippet.text || '';
+        const isMatch = !filter || text.toLowerCase().includes(filter);
+
+        if (isMatch) {
+          matchedCount++;
+          fullParagraphs.push(text);
+
+          const row = document.createElement('div');
+          row.className = 'group p-3.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.15] backdrop-blur-xl transition-all duration-200 flex items-start space-x-3.5 shadow-sm';
+          
+          // Formatted Time Button (iOS Glass Pill)
+          const timeBtn = document.createElement('button');
+          timeBtn.className = 'px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-rose-600 border border-white/[0.15] hover:border-rose-500 text-white/90 hover:text-white font-mono text-xs font-semibold shrink-0 transition-all active:scale-95 shadow-sm';
+          timeBtn.textContent = formatTime(snippet.start);
+          timeBtn.title = `Jump video to ${formatTime(snippet.start)}`;
+          timeBtn.onclick = () => seekToTimestamp(snippet.start);
+
+          // Snippet Text
+          const textEl = document.createElement('div');
+          textEl.className = 'flex-1 text-sm text-white/90 leading-relaxed break-words';
+          
+          if (filter) {
+            const regex = new RegExp(`(${filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            textEl.innerHTML = text.replace(regex, '<mark class="highlight">$1</mark>');
+          } else {
+            textEl.textContent = text;
+          }
+
+          // Single row copy button
+          const copySingleBtn = document.createElement('button');
+          copySingleBtn.className = 'opacity-0 group-hover:opacity-100 p-1.5 text-white/40 hover:text-white rounded-xl hover:bg-white/10 transition text-xs shrink-0';
+          copySingleBtn.title = 'Copy line';
+          copySingleBtn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
+          copySingleBtn.onclick = () => {
+            navigator.clipboard.writeText(text);
+            showToast('Line copied!');
+          };
+
+          row.appendChild(timeBtn);
+          row.appendChild(textEl);
+          row.appendChild(copySingleBtn);
+          transcriptTimeline.appendChild(row);
+        }
+      });
+
+      // Update Search Match Counter
+      if (filter) {
+        searchCount.textContent = `${matchedCount} of ${state.currentSnippets.length} matches`;
+        clearSearchBtn.classList.remove('hidden');
+      } else {
+        searchCount.textContent = `${state.currentSnippets.length} snippets`;
+        clearSearchBtn.classList.add('hidden');
+      }
+
+      // Update Story Text
+      transcriptText.innerHTML = fullParagraphs.join(' ');
+    }
+
+    // Search input listener
+    searchInput.addEventListener('input', (e) => {
+      state.activeFilter = e.target.value.trim();
+      renderSnippets();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      state.activeFilter = '';
+      renderSnippets();
+    });
+
+    // View Mode switch
+    viewTimelineBtn.addEventListener('click', () => {
+      state.viewMode = 'timeline';
+      viewTimelineBtn.className = 'px-3.5 py-1.5 rounded-xl bg-white/[0.16] text-white font-semibold shadow-sm transition-all duration-200';
+      viewTextBtn.className = 'px-3.5 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200';
+      transcriptTimeline.classList.remove('hidden');
+      transcriptText.classList.add('hidden');
+    });
+
+    viewTextBtn.addEventListener('click', () => {
+      state.viewMode = 'text';
+      viewTextBtn.className = 'px-3.5 py-1.5 rounded-xl bg-white/[0.16] text-white font-semibold shadow-sm transition-all duration-200';
+      viewTimelineBtn.className = 'px-3.5 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200';
+      transcriptTimeline.classList.add('hidden');
+      transcriptText.classList.remove('hidden');
+    });
+
+    // Copy full transcript text
+    copyAllBtn.addEventListener('click', () => {
+      const fullText = state.formattedData.text || state.currentSnippets.map(s => s.text).join('\n');
+      if (!fullText) return;
+      navigator.clipboard.writeText(fullText);
+      copyAllText.textContent = 'Copied to Clipboard!';
+      setTimeout(() => {
+        copyAllText.textContent = 'Copy Full Transcript (Text)';
+      }, 2000);
+      showToast('Copied full transcript!');
+    });
+
+    // Download helper function
+    window.downloadFormat = function(fmt) {
+      let content = '';
+      let mimeType = 'text/plain';
+      const videoId = state.currentVideoId || 'youtube_transcript';
+      const lang = (state.currentTranscript && state.currentTranscript.language_code) || 'en';
+      const filename = `${videoId}_${lang}.${fmt}`;
+
+      if (fmt === 'txt') {
+        content = state.formattedData.text || state.currentSnippets.map(s => s.text).join('\n');
+        mimeType = 'text/plain;charset=utf-8';
+      } else if (fmt === 'srt') {
+        content = state.formattedData.srt || '';
+        mimeType = 'application/x-subrip;charset=utf-8';
+      } else if (fmt === 'vtt') {
+        content = state.formattedData.vtt || '';
+        mimeType = 'text/vtt;charset=utf-8';
+      } else if (fmt === 'json') {
+        content = state.formattedData.json || JSON.stringify(state.currentSnippets, null, 2);
+        mimeType = 'application/json;charset=utf-8';
+      }
+
+      if (!content) {
+        showToast(`No ${fmt.toUpperCase()} content available`);
+        return;
+      }
+
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`Downloaded ${filename}`);
+    };
+  </script>
+</body>
+</html>

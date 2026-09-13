@@ -80,19 +80,147 @@
   Maintenance of this project is made possible by all the <a href="https://github.com/jdepoix/youtube-transcript-api/graphs/contributors">contributors</a> and <a href="https://github.com/sponsors/jdepoix">sponsors</a>. If you'd like to sponsor this project <a href="https://github.com/sponsors/jdepoix">click here</a>. 💖
 </p>
 
-## Install
+> [!NOTE]
+> **Credits & Attribution**: This project builds upon the open-source [youtube-transcript-api](https://github.com/jdepoix/youtube-transcript-api) created and maintained by **Jonas Depoix** ([@jdepoix](https://github.com/jdepoix)) and contributors. All credit for the underlying Python transcript scraping engine and protocol mechanics belongs to Jonas Depoix and the original contributors.
+
+---
+
+## ✨ Enhancements in this Extended Version
+
+This version enhances the original library with an **Apple iOS Frosted Glass Web Studio**, full YouTube URL support, **Developer REST API endpoints**, and **1-step Docker containerization**:
+
+- 🎨 **Apple iOS Liquid Glass Web UI**: Translucent frosted glassmorphic interface with multi-color ambient lighting mesh, centered navigation, and iOS segmented controls.
+- 🔗 **Full YouTube URL Input**: Paste any video link (`watch?v=`, `youtu.be/`, Shorts, Live, Embed) directly without having to manually extract video IDs.
+- 🎬 **Embedded Video Synchronization**: Interactive side-by-side YouTube player that automatically seeks to the exact second when clicking any transcript timestamp.
+- 🌐 **Multi-Language & Live Translation**: Inspect all available caption tracks (`[Manual]` vs `[Auto]`) and translate transcripts into 100+ languages with one click.
+- 🔍 **Real-Time Keyword Search**: Filter lines as you type with match counting and yellow text highlighting.
+- 💾 **Multi-Format Export**: One-click clipboard copy or direct download for `.txt`, `.srt`, `.vtt`, and `.json`.
+- 🔌 **Developer REST API**: Query transcripts with simple `GET` or `POST` requests, returning unified full `text` alongside timestamped `snippets`.
+- 📖 **Interactive Swagger Docs**: Interactive OpenAPI documentation at `/docs`.
+- 🐳 **Ready-to-Deploy Docker**: Production Dockerfile and `docker-compose.yml` for instant 1-command server deployment.
+
+---
+
+## 🐳 Easy Setup with Docker (Recommended for Server Deployment)
+
+Deploying on any Linux server, VPS, or local machine takes less than a minute.
+
+### Method 1: Using Docker Compose (Fastest)
+
+Clone or copy the repository to your server and run:
+
+```bash
+docker compose up -d
+```
+
+That's it! The Web UI and REST API will start automatically in the background with auto-restart enabled.
+
+- **Web UI**: Open `http://<your-server-ip>:8010` in your browser.
+- **Interactive API Docs**: Open `http://<your-server-ip>:8010/docs`.
+
+#### Useful Docker Compose Commands:
+```bash
+# View live logs
+docker compose logs -f
+
+# Restart container
+docker compose restart
+
+# Stop container
+docker compose down
+```
+
+---
+
+### Method 2: Using Docker CLI
+
+1. **Build the container image**:
+   ```bash
+   docker build -t youtube-transcript-studio .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -d \
+     --name youtube-transcript-studio \
+     --restart unless-stopped \
+     -p 8010:8010 \
+     youtube-transcript-studio
+   ```
+
+3. **Check status & logs**:
+   ```bash
+   docker ps
+   docker logs -f youtube-transcript-studio
+   ```
+
+*(To run on a different port like port 80, change `-p 8010:8010` to `-p 80:8010`)*.
+
+---
+
+## 💻 Running Locally without Docker
+
+```bash
+python app.py
+```
+
+This starts the server on `http://127.0.0.1:8010` and automatically opens your default browser.
+
+---
+
+## 🔌 REST API Documentation
+
+The server exposes clean REST endpoints for developer integrations, webhooks, and automation pipelines:
+
+* **Interactive Swagger Documentation**: `http://<server-ip>:8010/docs`
+* **Fetch Transcript (GET)**:
+  ```http
+  GET /api/transcript?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ
+  ```
+  *Query Parameters:*
+  - `url` (required): Full YouTube URL or 11-char Video ID
+  - `lang` (optional): Preferred language code (e.g. `en`, `es`)
+  - `translate` (optional): Target language code to translate transcript into (e.g. `translate=es`)
+  - `format` (optional): `json` (default), `text`, `srt`, or `vtt`
+
+* **Structured Response**:
+  The JSON output includes a unified full `text` string alongside timestamped `snippets`:
+  ```json
+  {
+    "success": true,
+    "video_id": "dQw4w9WgXcQ",
+    "language": "English",
+    "language_code": "en",
+    "word_count": 1420,
+    "duration_seconds": 213.5,
+    "text": "Full plain text transcript joined together ready for downstream prompts...",
+    "snippets": [
+      { "text": "...", "start": 0.0, "duration": 2.0 }
+    ],
+    "srt": "...",
+    "vtt": "..."
+  }
+  ```
+
+* **Plain Text Only**:
+  ```http
+  GET /api/transcript?url=dQw4w9WgXcQ&format=text
+  ```
+
+* **List Available Languages**:
+  ```http
+  GET /api/languages?url=dQw4w9WgXcQ
+  ```
+
+---
+
+## 📦 Python Library Install & API Usage
 
 It is recommended to [install this module by using pip](https://pypi.org/project/youtube-transcript-api/):
 
-```
+```bash
 pip install youtube-transcript-api
 ```
-
-You can either integrate this module [into an existing application](#api) or just use it via a [CLI](#cli).
-
-## API
-
-The easiest way to get a transcript for a given video is to execute:
 
 ```python
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -610,4 +738,12 @@ If this project makes you happy by reducing your development time, you can make 
 coffee, or become a [Sponsor of this project](https://github.com/sponsors/jdepoix) :)  
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BAENLEW8VUJ6G&source=url)
+
+---
+
+## 💖 Credits & Attribution
+
+- **Original Creator & Core Engine**: [Jonas Depoix](https://github.com/jdepoix) ([@jdepoix](https://github.com/jdepoix)) and the [open-source contributors](https://github.com/jdepoix/youtube-transcript-api/graphs/contributors) of `youtube-transcript-api`.
+- **Extended Studio UI & REST API**: Developed to provide an Apple iOS-inspired Web Studio interface, URL parsing, developer REST endpoints, and 1-step Docker container deployment.
+
 

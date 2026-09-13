@@ -1,0 +1,13 @@
+services:
+  youtube-transcript-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: youtube-transcript-studio
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8010
+      - NO_BROWSER=true
