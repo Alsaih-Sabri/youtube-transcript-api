@@ -17,7 +17,7 @@ from typing import Optional, List, Dict, Any
 from urllib.parse import urlparse, parse_qs
 
 from fastapi import FastAPI, Request, Query
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -129,10 +129,76 @@ def build_proxy_config(
     return None
 
 
-def format_transcript_outputs(transcript: Any) -> Dict[str, str]:
-    """Generate TXT, SRT, VTT, and formatted JSON representations."""
+def generate_readable_paragraphs(snippets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Groups chopped transcript snippets into coherent, human-friendly paragraphs.
+    Splits on natural pauses (>= 1.5s gap between snippets) or sentence endings (. ? !),
+    capitalizes sentence beginnings, and records starting timestamps.
+    """
+    if not snippets:
+        return []
+
+    paragraphs = []
+    current_start = snippets[0].get("start", 0.0)
+    current_texts = []
+    current_words = 0
+
+    for i, s in enumerate(snippets):
+        raw_text = (s.get("text") or "").strip()
+        if not raw_text:
+            continue
+
+        current_texts.append(raw_text)
+        words = len(raw_text.split())
+        current_words += words
+
+        should_break = False
+        if i + 1 < len(snippets):
+            next_s = snippets[i + 1]
+            current_end = s.get("start", 0.0) + s.get("duration", 0.0)
+            pause_gap = next_s.get("start", 0.0) - current_end
+
+            # Natural pause gap >= 1.5s after at least 25 words
+            if pause_gap >= 1.5 and current_words >= 25:
+                should_break = True
+            # Punctuation boundary after at least 60 words
+            elif current_words >= 60 and raw_text[-1:] in ".?!":
+                should_break = True
+            # Maximum words threshold for a readable paragraph
+            elif current_words >= 110:
+                should_break = True
+        else:
+            should_break = True
+
+        if should_break:
+            paragraph_text = " ".join(current_texts)
+            # Capitalize first character and any letter immediately after sentence-ending punctuation
+            paragraph_text = re.sub(
+                r"(^\s*|[.?!]\s+)([a-z])",
+                lambda m: m.group(1) + m.group(2).upper(),
+                paragraph_text,
+            )
+            paragraphs.append({
+                "start": current_start,
+                "text": paragraph_text,
+                "word_count": current_words,
+            })
+            if i + 1 < len(snippets):
+                current_start = snippets[i + 1].get("start", 0.0)
+                current_texts = []
+                current_words = 0
+
+    return paragraphs
+
+
+def format_transcript_outputs(transcript: Any, snippets: Optional[List[Dict[str, Any]]] = None) -> Dict[str, str]:
+    """Generate TXT, SRT, VTT, readable text, and formatted JSON representations."""
+    raw_snippets = snippets if snippets is not None else transcript.to_raw_data()
+    paragraphs = generate_readable_paragraphs(raw_snippets)
+    readable_text = "\n\n".join(p["text"] for p in paragraphs)
     return {
         "text": TextFormatter().format_transcript(transcript),
+        "readable_text": readable_text,
         "srt": SRTFormatter().format_transcript(transcript),
         "vtt": WebVTTFormatter().format_transcript(transcript),
         "json": JSONFormatter().format_transcript(transcript, indent=2),
@@ -265,9 +331,11 @@ def get_transcript_payload(
     snippets = fetched.to_raw_data()
     full_text = " ".join(s.get("text", "") for s in snippets)
     word_count = len(full_text.split()) if full_text else 0
+    reading_time_minutes = max(1, round(word_count / 200)) if word_count else 0
     duration_seconds = round(snippets[-1]["start"] + snippets[-1]["duration"], 2) if snippets else 0.0
 
-    formatted = format_transcript_outputs(fetched)
+    paragraphs = generate_readable_paragraphs(snippets)
+    formatted = format_transcript_outputs(fetched, snippets=snippets)
 
     return {
         "video_id": video_id,
@@ -276,8 +344,11 @@ def get_transcript_payload(
         "is_generated": fetched.is_generated,
         "is_translated": bool(translate),
         "word_count": word_count,
+        "reading_time_minutes": reading_time_minutes,
         "duration_seconds": duration_seconds,
         "text": full_text,
+        "readable_text": formatted["readable_text"],
+        "paragraphs": paragraphs,
         "snippets": snippets,
         "available_transcripts": available_transcripts,
         "translation_languages": translation_languages,
@@ -309,7 +380,7 @@ class ApiTranscriptRequest(BaseModel):
     url: str = Field(..., description="YouTube video URL or Video ID")
     lang: Optional[str] = Field(None, description="Language code (e.g., 'en', 'es', 'de')")
     translate: Optional[str] = Field(None, description="Target language code to translate into")
-    format: Optional[str] = Field("json", description="Output format: 'json', 'text', 'srt', or 'vtt'")
+    format: Optional[str] = Field("json", description="Output format: 'json', 'text', 'readable', 'srt', or 'vtt'")
     proxy_http: Optional[str] = None
     proxy_https: Optional[str] = None
     webshare_user: Optional[str] = None
@@ -332,6 +403,15 @@ async def health():
     return {"status": "ok", "app": "YouTube Transcript Studio", "version": "1.2.4"}
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Serve favicon for direct browser requests."""
+    fav_path = STATIC_DIR / "favicon.svg"
+    if fav_path.exists():
+        return FileResponse(fav_path, media_type="image/svg+xml")
+    return Response(status_code=204)
+
+
 # ==============================================================================
 # REST API Endpoints
 # ==============================================================================
@@ -341,7 +421,7 @@ async def get_transcript_api(
     url: str = Query(..., description="YouTube video URL or Video ID (e.g. 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' or 'dQw4w9WgXcQ')"),
     lang: Optional[str] = Query(None, description="Language code (e.g. 'en', 'es'). Defaults to English or the first available caption track."),
     translate: Optional[str] = Query(None, description="Target language code to translate transcript into (e.g. 'es', 'fr', 'de')."),
-    format: str = Query("json", description="Output format: 'json', 'text', 'srt', or 'vtt'"),
+    format: str = Query("json", description="Output format: 'json', 'text', 'readable', 'srt', or 'vtt'"),
     proxy_http: Optional[str] = Query(None, description="Optional HTTP proxy URL"),
     proxy_https: Optional[str] = Query(None, description="Optional HTTPS proxy URL"),
     webshare_user: Optional[str] = Query(None, description="Optional Webshare username"),
@@ -349,7 +429,7 @@ async def get_transcript_api(
 ):
     """
     Get YouTube transcript via simple GET request.
-    Returns plain text, SRT, VTT, or rich JSON containing full text and timestamped snippets.
+    Returns plain text, human readable text with paragraphs, SRT, VTT, or rich JSON.
     """
     try:
         data = get_transcript_payload(
@@ -365,6 +445,8 @@ async def get_transcript_api(
         fmt = (format or "json").lower().strip()
         if fmt in ("text", "plain", "txt"):
             return PlainTextResponse(content=data["text"], media_type="text/plain; charset=utf-8")
+        if fmt in ("readable", "human", "paragraphs", "clean"):
+            return PlainTextResponse(content=data["readable_text"], media_type="text/plain; charset=utf-8")
         if fmt == "srt":
             return PlainTextResponse(content=data["formatted"]["srt"], media_type="text/plain; charset=utf-8")
         if fmt == "vtt":
@@ -379,8 +461,11 @@ async def get_transcript_api(
             "is_generated": data["is_generated"],
             "is_translated": data["is_translated"],
             "word_count": data["word_count"],
+            "reading_time_minutes": data["reading_time_minutes"],
             "duration_seconds": data["duration_seconds"],
             "text": data["text"],
+            "readable_text": data["readable_text"],
+            "paragraphs": data["paragraphs"],
             "snippets": data["snippets"],
             "srt": data["formatted"]["srt"],
             "vtt": data["formatted"]["vtt"],
@@ -481,11 +566,18 @@ async def fetch_transcript(req: FetchRequest):
         return {
             "success": True,
             "video_id": data["video_id"],
+            "word_count": data["word_count"],
+            "reading_time_minutes": data["reading_time_minutes"],
+            "duration_seconds": data["duration_seconds"],
             "transcript": {
                 "language": data["language"],
                 "language_code": data["language_code"],
                 "is_generated": data["is_generated"],
+                "word_count": data["word_count"],
+                "reading_time_minutes": data["reading_time_minutes"],
+                "duration_seconds": data["duration_seconds"],
                 "snippets": data["snippets"],
+                "paragraphs": data["paragraphs"],
             },
             "available_transcripts": data["available_transcripts"],
             "translation_languages": data["translation_languages"],
@@ -514,11 +606,18 @@ async def translate_transcript(req: TranslateRequest):
         return {
             "success": True,
             "video_id": req.video_id,
+            "word_count": data["word_count"],
+            "reading_time_minutes": data["reading_time_minutes"],
+            "duration_seconds": data["duration_seconds"],
             "transcript": {
                 "language": data["language"],
                 "language_code": data["language_code"],
                 "is_generated": data["is_generated"],
+                "word_count": data["word_count"],
+                "reading_time_minutes": data["reading_time_minutes"],
+                "duration_seconds": data["duration_seconds"],
                 "snippets": data["snippets"],
+                "paragraphs": data["paragraphs"],
             },
             "formatted": data["formatted"],
         }

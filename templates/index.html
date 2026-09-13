@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YouTube Transcript Studio</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/css/styles.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -270,19 +271,22 @@
               </a>
             </div>
 
-            <!-- Stats Bar -->
+            <!-- Stats Bar (Sleek 3-Card Layout) -->
             <div class="grid grid-cols-3 gap-2.5 pt-2 border-t border-white/[0.08] text-center">
-              <div class="p-2.5 rounded-2xl bg-black/25 border border-white/[0.07]">
-                <span class="block text-[10px] uppercase font-bold tracking-wider text-white/40">Snippets</span>
-                <span id="stat-snippets" class="font-extrabold text-sm text-white/90">0</span>
-              </div>
               <div class="p-2.5 rounded-2xl bg-black/25 border border-white/[0.07]">
                 <span class="block text-[10px] uppercase font-bold tracking-wider text-white/40">Words</span>
                 <span id="stat-words" class="font-extrabold text-sm text-white/90">0</span>
+                <span id="stat-read-time" class="block text-[10px] text-rose-400 font-medium">~0 min read</span>
+              </div>
+              <div class="p-2.5 rounded-2xl bg-black/25 border border-white/[0.07]">
+                <span class="block text-[10px] uppercase font-bold tracking-wider text-white/40">Snippets</span>
+                <span id="stat-snippets" class="font-extrabold text-sm text-white/90">0</span>
+                <span class="block text-[10px] text-white/40">captions</span>
               </div>
               <div class="p-2.5 rounded-2xl bg-black/25 border border-white/[0.07]">
                 <span class="block text-[10px] uppercase font-bold tracking-wider text-white/40">Duration</span>
                 <span id="stat-duration" class="font-extrabold text-sm text-white/90">0:00</span>
+                <span class="block text-[10px] text-white/40">runtime</span>
               </div>
             </div>
           </div>
@@ -321,31 +325,35 @@
           </div>
         </div>
 
-        <!-- Exports & Actions Card -->
-        <div class="rounded-3xl glass-surface p-6 space-y-4">
+        <!-- Exports & Actions Card (Compact & Elegant) -->
+        <div class="rounded-3xl glass-surface p-5 space-y-3.5">
           <h3 class="text-xs font-bold tracking-wider uppercase text-white/70 flex items-center gap-2">
             <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            Export & Actions
+            Export & Share
           </h3>
 
           <div class="space-y-2.5">
-            <button id="copy-all-btn" class="w-full py-3 px-4 glass-pill hover:bg-white/[0.14] text-white/90 hover:text-white rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 active:scale-98">
+            <button id="copy-all-btn" class="w-full py-2.5 px-4 glass-pill hover:bg-white/[0.14] text-white/95 hover:text-white rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 active:scale-98 shadow-sm">
               <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              <span id="copy-all-text">Copy Full Transcript (Text)</span>
+              <span id="copy-all-text">Copy Transcript</span>
             </button>
 
-            <div class="grid grid-cols-2 gap-2 pt-1">
-              <button onclick="downloadFormat('txt')" class="p-3 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex items-center justify-center gap-1.5 active:scale-95">
-                <span class="text-emerald-400 font-mono font-bold">.TXT</span> Plain Text
+            <div class="grid grid-cols-4 gap-2 pt-0.5">
+              <button onclick="downloadFormat('txt')" class="p-2 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex flex-col items-center justify-center gap-0.5 active:scale-95">
+                <span class="text-emerald-400 font-mono font-bold text-[11px]">.TXT</span>
+                <span class="text-[9px] text-white/40">Text</span>
               </button>
-              <button onclick="downloadFormat('srt')" class="p-3 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex items-center justify-center gap-1.5 active:scale-95">
-                <span class="text-blue-400 font-mono font-bold">.SRT</span> Subtitles
+              <button onclick="downloadFormat('srt')" class="p-2 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex flex-col items-center justify-center gap-0.5 active:scale-95">
+                <span class="text-blue-400 font-mono font-bold text-[11px]">.SRT</span>
+                <span class="text-[9px] text-white/40">Captions</span>
               </button>
-              <button onclick="downloadFormat('vtt')" class="p-3 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex items-center justify-center gap-1.5 active:scale-95">
-                <span class="text-purple-400 font-mono font-bold">.VTT</span> WebVTT
+              <button onclick="downloadFormat('vtt')" class="p-2 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex flex-col items-center justify-center gap-0.5 active:scale-95">
+                <span class="text-purple-400 font-mono font-bold text-[11px]">.VTT</span>
+                <span class="text-[9px] text-white/40">WebVTT</span>
               </button>
-              <button onclick="downloadFormat('json')" class="p-3 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex items-center justify-center gap-1.5 active:scale-95">
-                <span class="text-amber-400 font-mono font-bold">.JSON</span> Data
+              <button onclick="downloadFormat('json')" class="p-2 bg-black/30 hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl text-xs font-semibold text-white/80 hover:text-white transition flex flex-col items-center justify-center gap-0.5 active:scale-95">
+                <span class="text-amber-400 font-mono font-bold text-[11px]">.JSON</span>
+                <span class="text-[9px] text-white/40">Data</span>
               </button>
             </div>
           </div>
@@ -376,13 +384,16 @@
           <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
             <span id="search-count" class="text-xs text-white/50 font-medium"></span>
             
-            <!-- iOS Style Segmented Control -->
+            <!-- iOS Style Clean Segmented Control -->
             <div class="flex bg-black/40 p-1 rounded-2xl border border-white/[0.08] text-xs">
-              <button id="view-timeline-btn" class="px-3.5 py-1.5 rounded-xl bg-white/[0.16] text-white font-semibold shadow-sm transition-all duration-200">
+              <button id="view-timeline-btn" class="px-3 py-1.5 rounded-xl bg-white/[0.16] text-white font-semibold shadow-sm transition-all duration-200">
                 Timeline
               </button>
-              <button id="view-text-btn" class="px-3.5 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200">
-                Story Text
+              <button id="view-readable-btn" class="px-3 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200">
+                Readable
+              </button>
+              <button id="view-text-btn" class="px-3 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200">
+                Story
               </button>
             </div>
           </div>
@@ -394,6 +405,11 @@
           <!-- Timeline View -->
           <div id="transcript-timeline" class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1.5 custom-scrollbar">
             <!-- Snippet rows injected via JS -->
+          </div>
+
+          <!-- Readable Text View (Editorial Article Style Reading Canvas) -->
+          <div id="transcript-readable" class="hidden space-y-5 max-h-[680px] overflow-y-auto pr-3 pl-1 custom-scrollbar select-text">
+            <!-- Flowing paragraphs injected via JS -->
           </div>
 
           <!-- Story Text View (Continuous Reading) -->
@@ -423,10 +439,14 @@
       availableTranscripts: [],
       translationLanguages: [],
       currentSnippets: [],
+      currentParagraphs: [],
+      wordCount: 0,
+      readingTimeMinutes: 0,
       activeFilter: '',
-      viewMode: 'timeline',
+      viewMode: 'timeline', // 'timeline' | 'readable' | 'text'
       formattedData: {
         text: '',
+        readable_text: '',
         srt: '',
         vtt: '',
         json: ''
@@ -453,6 +473,7 @@
     const metaYoutubeLink = document.getElementById('meta-youtube-link');
     const statSnippets = document.getElementById('stat-snippets');
     const statWords = document.getElementById('stat-words');
+    const statReadTime = document.getElementById('stat-read-time');
     const statDuration = document.getElementById('stat-duration');
     const langSelect = document.getElementById('lang-select');
     const translateContainer = document.getElementById('translate-container');
@@ -463,8 +484,10 @@
     const clearSearchBtn = document.getElementById('clear-search-btn');
     const searchCount = document.getElementById('search-count');
     const transcriptTimeline = document.getElementById('transcript-timeline');
+    const transcriptReadable = document.getElementById('transcript-readable');
     const transcriptText = document.getElementById('transcript-text');
     const viewTimelineBtn = document.getElementById('view-timeline-btn');
+    const viewReadableBtn = document.getElementById('view-readable-btn');
     const viewTextBtn = document.getElementById('view-text-btn');
     const copyAllBtn = document.getElementById('copy-all-btn');
     const copyAllText = document.getElementById('copy-all-text');
@@ -546,6 +569,63 @@
       };
     }
 
+    // Client-side fallback to chunk snippets into readable paragraphs
+    function generateParagraphsFromSnippets(snippets) {
+      if (!snippets || snippets.length === 0) return [];
+      
+      const paragraphs = [];
+      let currentStart = snippets[0].start || 0;
+      let currentTexts = [];
+      let currentWords = 0;
+
+      for (let i = 0; i < snippets.length; i++) {
+        const s = snippets[i];
+        const rawText = (s.text || '').trim();
+        if (!rawText) continue;
+
+        currentTexts.push(rawText);
+        const words = rawText.split(/\s+/).length;
+        currentWords += words;
+
+        let shouldBreak = false;
+        if (i + 1 < snippets.length) {
+          const nextS = snippets[i + 1];
+          const currentEnd = (s.start || 0) + (s.duration || 0);
+          const pauseGap = (nextS.start || 0) - currentEnd;
+
+          // Natural speaker pause gap >= 1.5s after at least 25 words
+          if (pauseGap >= 1.5 && currentWords >= 25) {
+            shouldBreak = true;
+          } else if (currentWords >= 60 && /[.?!]$/.test(rawText)) {
+            shouldBreak = true;
+          } else if (currentWords >= 110) {
+            shouldBreak = true;
+          }
+        } else {
+          shouldBreak = true;
+        }
+
+        if (shouldBreak) {
+          let paragraphText = currentTexts.join(' ');
+          // Capitalize first letter of paragraph and letters after sentence punctuation
+          paragraphText = paragraphText.replace(/(^\s*|[.?!]\s+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+          paragraphs.push({
+            start: currentStart,
+            text: paragraphText,
+            word_count: currentWords
+          });
+
+          if (i + 1 < snippets.length) {
+            currentStart = snippets[i + 1].start || 0;
+            currentTexts = [];
+            currentWords = 0;
+          }
+        }
+      }
+
+      return paragraphs;
+    }
+
     // Fetch Transcript
     async function fetchTranscript(chosenLanguage = null) {
       const inputVal = urlInput.value.trim();
@@ -599,6 +679,14 @@
       state.currentSnippets = data.transcript.snippets || [];
       state.formattedData = data.formatted || {};
 
+      const wordCount = data.word_count || (data.transcript && data.transcript.word_count) || state.currentSnippets.reduce((sum, s) => sum + (s.text ? s.text.trim().split(/\s+/).length : 0), 0);
+      state.wordCount = wordCount;
+
+      const readingTime = data.reading_time_minutes || (data.transcript && data.transcript.reading_time_minutes) || (wordCount ? Math.max(1, Math.round(wordCount / 200)) : 0);
+      state.readingTimeMinutes = readingTime;
+
+      state.currentParagraphs = (data.transcript && data.transcript.paragraphs) || data.paragraphs || generateParagraphsFromSnippets(state.currentSnippets);
+
       // Set Player
       youtubePlayer.src = `https://www.youtube.com/embed/${data.video_id}?enablejsapi=1`;
       metaVideoId.textContent = data.video_id;
@@ -606,8 +694,8 @@
 
       // Stats
       statSnippets.textContent = state.currentSnippets.length.toLocaleString();
-      const wordCount = state.currentSnippets.reduce((sum, s) => sum + (s.text ? s.text.trim().split(/\s+/).length : 0), 0);
       statWords.textContent = wordCount.toLocaleString();
+      statReadTime.textContent = `~${readingTime} min`;
       
       const lastSnippet = state.currentSnippets[state.currentSnippets.length - 1];
       const maxDuration = lastSnippet ? lastSnippet.start + lastSnippet.duration : 0;
@@ -644,8 +732,8 @@
       emptyState.classList.add('hidden');
       workspace.classList.remove('hidden');
 
-      // Render Snippets
-      renderSnippets();
+      // Render Snippets and Views
+      renderAllViews();
     }
 
     // Language change
@@ -684,7 +772,18 @@
         state.currentTranscript = data.transcript;
         state.currentSnippets = data.transcript.snippets || [];
         state.formattedData = data.formatted || {};
-        renderSnippets();
+        
+        const wordCount = data.word_count || (data.transcript && data.transcript.word_count) || state.currentSnippets.reduce((sum, s) => sum + (s.text ? s.text.trim().split(/\s+/).length : 0), 0);
+        state.wordCount = wordCount;
+        const readingTime = data.reading_time_minutes || (data.transcript && data.transcript.reading_time_minutes) || (wordCount ? Math.max(1, Math.round(wordCount / 200)) : 0);
+        state.readingTimeMinutes = readingTime;
+        state.currentParagraphs = (data.transcript && data.transcript.paragraphs) || data.paragraphs || generateParagraphsFromSnippets(state.currentSnippets);
+
+        statWords.textContent = wordCount.toLocaleString();
+        statReadTime.textContent = `~${readingTime} min`;
+        statSnippets.textContent = state.currentSnippets.length.toLocaleString();
+
+        renderAllViews();
         showToast(`Translated to ${data.transcript.language}!`);
 
       } catch (err) {
@@ -713,21 +812,22 @@
       showToast(`Jumped to ${formatTime(sec)}`);
     }
 
-    // Render snippets in Timeline & Text modes
-    function renderSnippets() {
+    // Render Timeline, Readable Paragraphs, and Story Text
+    function renderAllViews() {
       const filter = state.activeFilter.toLowerCase();
-      transcriptTimeline.innerHTML = '';
       
-      let matchedCount = 0;
-      let fullParagraphs = [];
+      // 1. Timeline View
+      transcriptTimeline.innerHTML = '';
+      let timelineMatched = 0;
+      let fullStoryLines = [];
 
-      state.currentSnippets.forEach((snippet, index) => {
+      state.currentSnippets.forEach((snippet) => {
         const text = snippet.text || '';
         const isMatch = !filter || text.toLowerCase().includes(filter);
 
         if (isMatch) {
-          matchedCount++;
-          fullParagraphs.push(text);
+          timelineMatched++;
+          fullStoryLines.push(text);
 
           const row = document.createElement('div');
           row.className = 'group p-3.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.15] backdrop-blur-xl transition-all duration-200 flex items-start space-x-3.5 shadow-sm';
@@ -767,58 +867,133 @@
         }
       });
 
-      // Update Search Match Counter
+      // 2. Readable (Editorial Article Style Reading View)
+      transcriptReadable.innerHTML = '';
+      let readableMatched = 0;
+      const paragraphs = state.currentParagraphs && state.currentParagraphs.length > 0 
+        ? state.currentParagraphs 
+        : generateParagraphsFromSnippets(state.currentSnippets);
+
+      paragraphs.forEach((para) => {
+        const text = para.text || '';
+        const isMatch = !filter || text.toLowerCase().includes(filter);
+
+        if (isMatch) {
+          readableMatched++;
+
+          const pItem = document.createElement('div');
+          pItem.className = 'group relative transition-all rounded-2xl hover:bg-white/[0.02] p-2 -mx-2';
+
+          const timeBtn = document.createElement('button');
+          timeBtn.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 mr-2 rounded-lg bg-white/[0.08] hover:bg-rose-600 border border-white/10 hover:border-rose-500 text-rose-300 hover:text-white font-mono text-xs font-semibold align-baseline transition-all active:scale-95 shadow-sm';
+          timeBtn.innerHTML = `<svg class="w-3 h-3 text-rose-400 group-hover:text-white inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg> ${formatTime(para.start)}`;
+          timeBtn.title = `Jump video to ${formatTime(para.start)}`;
+          timeBtn.onclick = () => seekToTimestamp(para.start);
+
+          const copyParaBtn = document.createElement('button');
+          copyParaBtn.className = 'opacity-0 group-hover:opacity-100 float-right ml-2 p-1 text-white/30 hover:text-white transition rounded-lg hover:bg-white/10 text-xs';
+          copyParaBtn.title = 'Copy paragraph';
+          copyParaBtn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
+          copyParaBtn.onclick = () => {
+            navigator.clipboard.writeText(text);
+            showToast('Paragraph copied!');
+          };
+
+          const pText = document.createElement('p');
+          pText.className = 'text-sm sm:text-[15px] leading-relaxed text-white/85 select-text';
+
+          pText.appendChild(copyParaBtn);
+          pText.appendChild(timeBtn);
+
+          const textSpan = document.createElement('span');
+          if (filter) {
+            const regex = new RegExp(`(${filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            textSpan.innerHTML = text.replace(regex, '<mark class="highlight">$1</mark>');
+          } else {
+            textSpan.textContent = text;
+          }
+          pText.appendChild(textSpan);
+
+          pItem.appendChild(pText);
+          transcriptReadable.appendChild(pItem);
+        }
+      });
+
+      // 3. Story Text View
+      transcriptText.innerHTML = fullStoryLines.join(' ');
+
+      // Search Counter update
       if (filter) {
-        searchCount.textContent = `${matchedCount} of ${state.currentSnippets.length} matches`;
+        if (state.viewMode === 'readable') {
+          searchCount.textContent = `${readableMatched} of ${paragraphs.length} paragraphs`;
+        } else {
+          searchCount.textContent = `${timelineMatched} of ${state.currentSnippets.length} snippets`;
+        }
         clearSearchBtn.classList.remove('hidden');
       } else {
-        searchCount.textContent = `${state.currentSnippets.length} snippets`;
+        if (state.viewMode === 'readable') {
+          searchCount.textContent = `${paragraphs.length} paragraphs`;
+        } else {
+          searchCount.textContent = `${state.currentSnippets.length} snippets`;
+        }
         clearSearchBtn.classList.add('hidden');
       }
-
-      // Update Story Text
-      transcriptText.innerHTML = fullParagraphs.join(' ');
     }
 
     // Search input listener
     searchInput.addEventListener('input', (e) => {
       state.activeFilter = e.target.value.trim();
-      renderSnippets();
+      renderAllViews();
     });
 
     clearSearchBtn.addEventListener('click', () => {
       searchInput.value = '';
       state.activeFilter = '';
-      renderSnippets();
+      renderAllViews();
     });
 
-    // View Mode switch
-    viewTimelineBtn.addEventListener('click', () => {
-      state.viewMode = 'timeline';
-      viewTimelineBtn.className = 'px-3.5 py-1.5 rounded-xl bg-white/[0.16] text-white font-semibold shadow-sm transition-all duration-200';
-      viewTextBtn.className = 'px-3.5 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200';
-      transcriptTimeline.classList.remove('hidden');
-      transcriptText.classList.add('hidden');
-    });
+    // View Mode Switcher
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      const activeClass = 'px-3.5 py-1.5 rounded-xl bg-white/[0.16] text-white font-semibold shadow-sm transition-all duration-200';
+      const inactiveClass = 'px-3.5 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200';
 
-    viewTextBtn.addEventListener('click', () => {
-      state.viewMode = 'text';
-      viewTextBtn.className = 'px-3.5 py-1.5 rounded-xl bg-white/[0.16] text-white font-semibold shadow-sm transition-all duration-200';
-      viewTimelineBtn.className = 'px-3.5 py-1.5 rounded-xl text-white/50 hover:text-white font-medium transition-all duration-200';
-      transcriptTimeline.classList.add('hidden');
-      transcriptText.classList.remove('hidden');
-    });
+      viewTimelineBtn.className = (mode === 'timeline') ? activeClass : inactiveClass;
+      viewReadableBtn.className = (mode === 'readable') ? activeClass : inactiveClass;
+      viewTextBtn.className = (mode === 'text') ? activeClass : inactiveClass;
 
-    // Copy full transcript text
+      transcriptTimeline.classList.toggle('hidden', mode !== 'timeline');
+      transcriptReadable.classList.toggle('hidden', mode !== 'readable');
+      transcriptText.classList.toggle('hidden', mode !== 'text');
+
+      renderAllViews();
+    }
+
+    viewTimelineBtn.addEventListener('click', () => setViewMode('timeline'));
+    viewReadableBtn.addEventListener('click', () => setViewMode('readable'));
+    viewTextBtn.addEventListener('click', () => setViewMode('text'));
+
+    // Copy transcript text (adapts to active tab)
     copyAllBtn.addEventListener('click', () => {
-      const fullText = state.formattedData.text || state.currentSnippets.map(s => s.text).join('\n');
-      if (!fullText) return;
-      navigator.clipboard.writeText(fullText);
-      copyAllText.textContent = 'Copied to Clipboard!';
+      let textToCopy = '';
+      if (state.viewMode === 'readable') {
+        const paras = state.currentParagraphs && state.currentParagraphs.length > 0 
+          ? state.currentParagraphs 
+          : generateParagraphsFromSnippets(state.currentSnippets);
+        textToCopy = paras.map(p => `[${formatTime(p.start)}]\n${p.text}`).join('\n\n') || state.formattedData.readable_text || '';
+      } else if (state.viewMode === 'timeline') {
+        textToCopy = state.currentSnippets.map(s => `[${formatTime(s.start)}] ${s.text}`).join('\n');
+      } else {
+        textToCopy = state.formattedData.text || state.currentSnippets.map(s => s.text).join('\n');
+      }
+
+      if (!textToCopy) return;
+      navigator.clipboard.writeText(textToCopy);
+      copyAllText.textContent = 'Copied!';
       setTimeout(() => {
-        copyAllText.textContent = 'Copy Full Transcript (Text)';
+        copyAllText.textContent = 'Copy Transcript';
       }, 2000);
-      showToast('Copied full transcript!');
+      showToast('Copied to clipboard!');
     });
 
     // Download helper function
@@ -827,10 +1002,17 @@
       let mimeType = 'text/plain';
       const videoId = state.currentVideoId || 'youtube_transcript';
       const lang = (state.currentTranscript && state.currentTranscript.language_code) || 'en';
-      const filename = `${videoId}_${lang}.${fmt}`;
+      let filename = `${videoId}_${lang}.${fmt}`;
 
       if (fmt === 'txt') {
-        content = state.formattedData.text || state.currentSnippets.map(s => s.text).join('\n');
+        if (state.viewMode === 'readable') {
+          const paras = state.currentParagraphs && state.currentParagraphs.length > 0 
+            ? state.currentParagraphs 
+            : generateParagraphsFromSnippets(state.currentSnippets);
+          content = paras.map(p => `[${formatTime(p.start)}]\n${p.text}`).join('\n\n') || state.formattedData.readable_text || '';
+        } else {
+          content = state.formattedData.text || state.currentSnippets.map(s => s.text).join('\n');
+        }
         mimeType = 'text/plain;charset=utf-8';
       } else if (fmt === 'srt') {
         content = state.formattedData.srt || '';

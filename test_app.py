@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
-from app import app, extract_video_id, build_proxy_config, humanize_error
+from app import app, extract_video_id, build_proxy_config, humanize_error, generate_readable_paragraphs
 from youtube_transcript_api._transcripts import FetchedTranscript, FetchedTranscriptSnippet, _TranslationLanguage
 from youtube_transcript_api._errors import TranscriptsDisabled, VideoUnavailable, IpBlocked
 from youtube_transcript_api.proxies import GenericProxyConfig, WebshareProxyConfig
@@ -308,6 +308,63 @@ class TestYouTubeTranscriptApp(unittest.TestCase):
         html = res.text
         self.assertIn("/static/css/styles.css", html)
         self.assertNotIn("cdn.tailwindcss.com", html)
+
+    def test_generate_readable_paragraphs(self):
+        # Snippets with natural pause
+        snippets = [
+            {"text": "hello everyone and welcome back to this video today we are discussing docker and cloudflare", "start": 0.0, "duration": 5.0},
+            {"text": "we will see how easy it is to deploy services securely with https and custom domains", "start": 5.0, "duration": 4.0},
+            # Gap of 3 seconds (pause from 9.0 to 12.0)
+            {"text": "now let us move to the second part of the tutorial where we configure certificates", "start": 12.0, "duration": 6.0},
+            {"text": "make sure to follow all the steps carefully.", "start": 18.0, "duration": 3.0},
+        ]
+        paras = generate_readable_paragraphs(snippets)
+        self.assertEqual(len(paras), 2)
+        self.assertTrue(paras[0]["text"].startswith("Hello"))
+        self.assertTrue(paras[1]["text"].startswith("Now"))
+        self.assertEqual(paras[0]["start"], 0.0)
+        self.assertEqual(paras[1]["start"], 12.0)
+        self.assertGreater(paras[0]["word_count"], 0)
+
+    @patch("app.YouTubeTranscriptApi")
+    def test_readable_format_endpoint(self, mock_ytt_api_cls):
+        mock_snippet = FetchedTranscriptSnippet(text="welcome to the show.", start=0.0, duration=2.0)
+        mock_transcript = FetchedTranscript(
+            snippets=[mock_snippet],
+            language="English",
+            language_code="en",
+            is_generated=False,
+            video_id="dQw4w9WgXcQ",
+        )
+        mock_transcript_obj = MagicMock()
+        mock_transcript_obj.fetch.return_value = mock_transcript
+        mock_transcript_obj.language = "English"
+        mock_transcript_obj.language_code = "en"
+        mock_transcript_obj.is_generated = False
+        mock_transcript_obj.is_translatable = False
+
+        mock_transcript_list = MagicMock()
+        mock_transcript_list.__iter__.return_value = [mock_transcript_obj]
+        mock_transcript_list.find_transcript.return_value = mock_transcript_obj
+
+        mock_instance = MagicMock()
+        mock_instance.list.return_value = mock_transcript_list
+        mock_ytt_api_cls.return_value = mock_instance
+
+        # Test format=readable
+        res = self.client.get("/api/transcript?url=dQw4w9WgXcQ&format=readable")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("Welcome to the show.", res.text)
+
+        # Test JSON endpoint metrics
+        res_json = self.client.get("/api/transcript?url=dQw4w9WgXcQ")
+        self.assertEqual(res_json.status_code, 200)
+        data = res_json.json()
+        self.assertEqual(data["word_count"], 4)
+        self.assertEqual(data["reading_time_minutes"], 1)
+        self.assertIn("readable_text", data)
+        self.assertIn("paragraphs", data)
+        self.assertEqual(len(data["paragraphs"]), 1)
 
 
 if __name__ == "__main__":
