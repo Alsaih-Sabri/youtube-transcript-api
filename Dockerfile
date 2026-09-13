@@ -12,6 +12,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY pyproject.toml README.md ./
 COPY youtube_transcript_api ./youtube_transcript_api
 COPY templates ./templates
+COPY static ./static
 COPY app.py ./
 
 RUN pip install --no-cache-dir --upgrade pip && \

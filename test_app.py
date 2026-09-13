@@ -296,6 +296,19 @@ class TestYouTubeTranscriptApp(unittest.TestCase):
         self.assertEqual(len(data["transcripts"]), 1)
         self.assertEqual(len(data["translation_languages"]), 1)
 
+    def test_static_css_endpoint(self):
+        res = self.client.get("/static/css/styles.css")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("text/css", res.headers.get("content-type", ""))
+        self.assertTrue(len(res.content) > 1000)
+
+    def test_index_no_cdn_tailwindcss(self):
+        res = self.client.get("/")
+        self.assertEqual(res.status_code, 200)
+        html = res.text
+        self.assertIn("/static/css/styles.css", html)
+        self.assertNotIn("cdn.tailwindcss.com", html)
+
 
 if __name__ == "__main__":
     unittest.main()
